@@ -1,0 +1,46 @@
+name: Build
+on: [push, pull_request]
+
+jobs:
+  build:
+    name: OGX-Mini Build
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        board: [WAVESHARE_RP2350_USBH]
+
+    steps:
+      - name: Install Arm GNU Toolchain (arm-none-eabi-gcc)
+        uses: carlosperate/arm-none-eabi-gcc-action@v1
+
+      - name: Checkout OGX-Mini
+        uses: actions/checkout@v4
+        with:
+          path: ogx-mini
+          submodules: recursive
+
+      - name: Checkout Pico SDK
+        uses: actions/checkout@v4
+        with:
+          repository: raspberrypi/pico-sdk
+          ref: 2.1.0
+          path: pico-sdk
+          submodules: recursive
+
+      - name: Apply patches
+        run: |
+          cd ogx-mini
+          patch -p1 < .github/patches/compilation_fixes.patch
+
+      - name: Build OGX-Mini
+        env:
+          PICO_SDK_PATH: ${{ github.workspace }}/pico-sdk
+        run: |
+          cmake -S ogx-mini/Firmware/pico -B ogx-mini/Firmware/pico/build -G Ninja -DCMAKE_BUILD_TYPE=Release -DOGXMINI_BOARD=PI_PICO -DGAMEPADS_MAX=1
+          cmake --build ogx-mini/Firmware/pico/build --config Release --parallel $(nproc)
+
+      - name: Upload OGX-Mini
+        uses: actions/upload-artifact@v4
+        with:
+          name: OGX-Mini-${{ matrix.board }}
+          path: ogx-mini/Firmware/pico/build/OGX-Mini*.uf2
