@@ -36,7 +36,7 @@ jobs:
         env:
           PICO_SDK_PATH: ${{ github.workspace }}/pico-sdk
         run: |
-          cmake -S ogx-mini/Firmware/pico -B ogx-mini/Firmware/pico/build -G Ninja -DCMAKE_BUILD_TYPE=Release -DOGXMINI_BOARD=${{ matrix.board }} -DGAMEPADS_MAX=1
+          cmake -S ogx-mini/Firmware/pico -B ogx-mini/Firmware/pico/build -G Ninja -DCMAKE_BUILD_TYPE=Release -DOGXMINI_BOARD=PI_PICO -DGAMEPADS_MAX=1
           cmake --build ogx-mini/Firmware/pico/build --config Release --parallel $(nproc)
 
       - name: Upload OGX-Mini
