@@ -1,79 +1,12 @@
 #include <cstring>
-#include <array>
-#include <memory>
-#include <pico/multicore.h>
-
-#include "tusb.h"
 
 #include "Board/ogxm_log.h"
 #include "Board/board_api.h"
 #include "UserSettings/UserSettings.h"
 
-static constexpr uint32_t BUTTON_COMBO(const uint16_t& buttons, const uint8_t& dpad = 0) {
-    return (static_cast<uint32_t>(buttons) << 16) | static_cast<uint32_t>(dpad);
-}
-
-namespace ButtonCombo {
-    static constexpr uint32_t PS3       = BUTTON_COMBO(Gamepad::BUTTON_START, Gamepad::DPAD_LEFT);
-    static constexpr uint32_t DINPUT    = BUTTON_COMBO(Gamepad::BUTTON_START | Gamepad::BUTTON_RB, Gamepad::DPAD_LEFT);
-    static constexpr uint32_t XINPUT    = BUTTON_COMBO(Gamepad::BUTTON_START, Gamepad::DPAD_UP);
-    static constexpr uint32_t SWITCH    = BUTTON_COMBO(Gamepad::BUTTON_START, Gamepad::DPAD_DOWN);
-    static constexpr uint32_t XBOXOG    = BUTTON_COMBO(Gamepad::BUTTON_START, Gamepad::DPAD_RIGHT);
-    static constexpr uint32_t XBOXOG_SB = BUTTON_COMBO(Gamepad::BUTTON_START | Gamepad::BUTTON_RB, Gamepad::DPAD_RIGHT);
-    static constexpr uint32_t XBOXOG_XR = BUTTON_COMBO(Gamepad::BUTTON_START | Gamepad::BUTTON_LB, Gamepad::DPAD_RIGHT);
-    static constexpr uint32_t PSCLASSIC = BUTTON_COMBO(Gamepad::BUTTON_START | Gamepad::BUTTON_A);
-    static constexpr uint32_t WEBAPP    = BUTTON_COMBO(Gamepad::BUTTON_START | Gamepad::BUTTON_LB | Gamepad::BUTTON_RB);
-};
-
 static constexpr DeviceDriverType VALID_DRIVER_TYPES[] = {
-#if defined(CONFIG_EN_4CH)
-    DeviceDriverType::XBOXOG, 
-    DeviceDriverType::XBOXOG_SB, 
-    DeviceDriverType::XINPUT,
-    DeviceDriverType::PS3,
-    DeviceDriverType::PSCLASSIC, 
-    DeviceDriverType::WEBAPP,
-    #if defined(XREMOTE_ROM_AVAILABLE)
-    DeviceDriverType::XBOXOG_XR,
-    #endif
-
-#elif MAX_GAMEPADS > 1
-    DeviceDriverType::DINPUT, 
-    DeviceDriverType::SWITCH, 
-    DeviceDriverType::WEBAPP,
-
-#else // MAX_GAMEPADS == 1
-    DeviceDriverType::XBOXOG, 
-    DeviceDriverType::XBOXOG_SB, 
-    DeviceDriverType::DINPUT, 
-    DeviceDriverType::SWITCH, 
-    DeviceDriverType::WEBAPP,
-    DeviceDriverType::PS3,
-    DeviceDriverType::PSCLASSIC, 
-    DeviceDriverType::XINPUT,
-    #if defined(XREMOTE_ROM_AVAILABLE)
-    DeviceDriverType::XBOXOG_XR,
-    #endif
-
-#endif
+    DeviceDriverType::PS3
 };
-
-struct ComboMap { 
-    uint32_t combo; 
-    DeviceDriverType driver; 
-};
-
-static constexpr std::array<ComboMap, 9> BUTTON_COMBO_MAP = {{
-    { ButtonCombo::XBOXOG,    DeviceDriverType::XBOXOG    },
-    { ButtonCombo::XBOXOG_SB, DeviceDriverType::XBOXOG_SB },
-    { ButtonCombo::XBOXOG_XR, DeviceDriverType::XBOXOG_XR },
-    { ButtonCombo::WEBAPP,    DeviceDriverType::WEBAPP    },
-    { ButtonCombo::DINPUT,    DeviceDriverType::DINPUT    },
-    { ButtonCombo::SWITCH,    DeviceDriverType::SWITCH    },
-    { ButtonCombo::XINPUT,    DeviceDriverType::XINPUT    },
-    { ButtonCombo::PS3,       DeviceDriverType::PS3       },
-    { ButtonCombo::PSCLASSIC, DeviceDriverType::PSCLASSIC }
-}};
 
 const std::string UserSettings::INIT_FLAG_KEY()
 {
@@ -102,54 +35,14 @@ const std::string UserSettings::DATETIME_KEY()
 
 DeviceDriverType UserSettings::DEFAULT_DRIVER()
 {
-    return VALID_DRIVER_TYPES[0];
+    return DeviceDriverType::PS3;
 }
 
 //Checks if button combo has been held for 3 seconds, returns true if mode has been changed
 bool UserSettings::check_for_driver_change(Gamepad& gamepad)
 {
-    Gamepad::PadIn gp_in = gamepad.get_pad_in();
-    static uint32_t last_button_combo = BUTTON_COMBO(gp_in.buttons, gp_in.dpad);
-    static uint8_t call_count = 0;
-
-    uint32_t current_button_combo = BUTTON_COMBO(gp_in.buttons, gp_in.dpad);
-
-    if (!(current_button_combo & (static_cast<uint32_t>(Gamepad::BUTTON_START) << 16)) || 
-        last_button_combo != current_button_combo)
-    {
-        last_button_combo = current_button_combo;
-        call_count = 0;
-        return false;
-    }
-
-    ++call_count;
-
-    if (call_count < GP_CHECK_COUNT)
-    {
-        return false;
-    }
-
-    call_count = 0;
-
-    DeviceDriverType new_driver = DeviceDriverType::NONE;
-
-    for (const auto& combo_map : BUTTON_COMBO_MAP)
-    {
-        if (combo_map.combo == current_button_combo && is_valid_driver(combo_map.driver))
-        {
-            new_driver = combo_map.driver;
-            break;
-        }
-    }
-
-    if (new_driver == DeviceDriverType::NONE || new_driver == current_driver_)
-    {
-        return false;
-    }
-
-    current_driver_ = new_driver;
-
-    return true;
+    (void)gamepad;
+    return false;
 }
 
 //Disconnects usb and resets pico, call from core0

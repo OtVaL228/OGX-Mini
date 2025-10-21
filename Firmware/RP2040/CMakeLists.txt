@@ -32,26 +32,18 @@ init_git_submodules(${EXTERNAL_DIR}
 )
 apply_lib_patches(${EXTERNAL_DIR})
 
-set(SOURCES_BOARD 
+set(SOURCES_BOARD
     ${SRC}/main.cpp
 
     ${SRC}/OGXMini/OGXMini.cpp
     ${SRC}/OGXMini/Board/Standard.cpp
-    ${SRC}/OGXMini/Board/PicoW.cpp
-    ${SRC}/OGXMini/Board/Four_Channel_I2C.cpp
-    ${SRC}/OGXMini/Board/ESP32_Bluepad32_I2C.cpp
-    ${SRC}/OGXMini/Board/ESP32_Blueretro_I2C.cpp
 
     ${SRC}/TaskQueue/TaskQueue.cpp
 
     ${SRC}/Board/ogxm_log.cpp
-    ${SRC}/Board/esp32_api.cpp
     ${SRC}/Board/board_api.cpp
     ${SRC}/Board/board_api_private/board_api_led.cpp
-    ${SRC}/Board/board_api_private/board_api_rgb.cpp
-    ${SRC}/Board/board_api_private/board_api_bt.cpp
-    ${SRC}/Board/board_api_private/board_api_usbh.cpp
-    
+
     ${SRC}/UserSettings/UserSettings.cpp
     ${SRC}/UserSettings/UserProfile.cpp
     ${SRC}/UserSettings/JoystickSettings.cpp
@@ -60,17 +52,7 @@ set(SOURCES_BOARD
     ${SRC}/USBDevice/tud_callbacks.cpp
     ${SRC}/USBDevice/DeviceManager.cpp
     ${SRC}/USBDevice/DeviceDriver/DeviceDriver.cpp
-    ${SRC}/USBDevice/DeviceDriver/PSClassic/PSClassic.cpp
     ${SRC}/USBDevice/DeviceDriver/PS3/PS3.cpp
-    ${SRC}/USBDevice/DeviceDriver/Switch/Switch.cpp
-    ${SRC}/USBDevice/DeviceDriver/XInput/XInput.cpp
-    ${SRC}/USBDevice/DeviceDriver/XboxOG/XboxOG_GP.cpp
-    ${SRC}/USBDevice/DeviceDriver/XboxOG/XboxOG_SB.cpp
-    ${SRC}/USBDevice/DeviceDriver/XboxOG/XboxOG_XR.cpp
-    ${SRC}/USBDevice/DeviceDriver/DInput/DInput.cpp
-    ${SRC}/USBDevice/DeviceDriver/WebApp/WebApp.cpp
-    ${SRC}/USBDevice/DeviceDriver/XInput/tud_xinput/tud_xinput.cpp
-    ${SRC}/USBDevice/DeviceDriver/XboxOG/tud_xid/tud_xid.cpp
 )
 set(LIBS_BOARD
     # Base
@@ -105,109 +87,26 @@ set(PICO_BOARD none)
 
 if (OGXM_BOARD STREQUAL "PI_PICO")
     add_compile_definitions(CONFIG_OGXM_BOARD_PI_PICO=1)
-    set(EN_USB_HOST TRUE)
 
 elseif (OGXM_BOARD STREQUAL "PI_PICO2")
     add_compile_definitions(CONFIG_OGXM_BOARD_PI_PICO2=1)
-    set(EN_USB_HOST TRUE)
     set(PICO_PLATFORM rp2350)
     set(FLASH_SIZE_MB 4)
-
-elseif(OGXM_BOARD STREQUAL "PI_PICOW")
-    add_compile_definitions(CONFIG_OGXM_BOARD_PI_PICOW=1)
-    set(EN_BLUETOOTH TRUE)
-    set(PICO_BOARD pico_w)
-
-elseif(OGXM_BOARD STREQUAL "PI_PICO2W")
-    add_compile_definitions(CONFIG_OGXM_BOARD_PI_PICO2W=1)
-    set(EN_BLUETOOTH TRUE)
-    set(PICO_BOARD pico2_w)
-    set(PICO_PLATFORM rp2350)
-    set(FLASH_SIZE_MB 4)
-
-elseif(OGXM_BOARD STREQUAL "ADAFRUIT_FEATHER")
-    add_compile_definitions(CONFIG_OGXM_BOARD_ADAFRUIT_FEATHER=1)
-    set(EN_USB_HOST TRUE)
-    set(EN_RGB TRUE)
-    set(FLASH_SIZE_MB 8)
 
 elseif(OGXM_BOARD STREQUAL "RP2040_ZERO")
     add_compile_definitions(CONFIG_OGXM_BOARD_RP2040_ZERO=1)
-    set(EN_USB_HOST TRUE)
-    set(EN_RGB TRUE)
 
-# elseif(OGXM_BOARD STREQUAL "INTERNAL_4CH")
-#     set(EN_USB_HOST TRUE)
-#     set(EN_4CH TRUE)
-
-elseif(OGXM_BOARD STREQUAL "EXTERNAL_4CH_I2C")
-    add_compile_definitions(CONFIG_OGXM_BOARD_EXTERNAL_4CH=1)
-    set(EN_USB_HOST TRUE)
-    set(EN_4CH TRUE)
-    set(EN_RGB TRUE)
-
-elseif(OGXM_BOARD STREQUAL "ESP32_BLUEPAD32_I2C")
-    add_compile_definitions(CONFIG_OGXM_BOARD_ESP32_BLUEPAD32_I2C=1)
-    set(EN_ESP32 TRUE)
-    set(EN_UART_BRIDGE TRUE)
-
-    if(OGXM_RETAIL STREQUAL "TRUE")
-        message(STATUS "Retail mode enabled.")
-        add_compile_definitions(OGXM_RETAIL=1)
-    endif()
-
-elseif(OGXM_BOARD STREQUAL "ESP32_BLUERETRO_I2C")
-    add_compile_definitions(CONFIG_OGXM_BOARD_ESP32_BLUERETRO_I2C=1)
-    set(EN_ESP32 TRUE)
-    set(EN_BLUERETRO_I2C TRUE)
-    set(EN_UART_BRIDGE TRUE)
-
-    if(OGXM_RETAIL STREQUAL "TRUE")
-        message(STATUS "Retail mode enabled.")
-        add_compile_definitions(OGXM_RETAIL=1)
-    endif()
+elseif(OGXM_BOARD STREQUAL "ADAFRUIT_FEATHER")
+    add_compile_definitions(CONFIG_OGXM_BOARD_ADAFRUIT_FEATHER=1)
+    set(FLASH_SIZE_MB 8)
 
 else()
-    message(FATAL_ERROR "Invalid OGXM_BOARD value. See options in src/board_config.h")
+    message(FATAL_ERROR "Only PI_PICO, PI_PICO2, RP2040_ZERO, and ADAFRUIT_FEATHER boards are supported in this configuration.")
 
 endif()
 
 add_definitions(-DOGXM_BOARD=${OGXM_BOARD})
 
-if(EN_USB_HOST)
-    message(STATUS "USB host enabled.")
-    add_compile_definitions(CONFIG_EN_USB_HOST=1)
-    list(APPEND SOURCES_BOARD
-        ${SRC}/USBHost/tuh_callbacks.cpp
-        # HID
-        ${SRC}/USBHost/HostDriver/DInput/DInput.cpp
-        ${SRC}/USBHost/HostDriver/PSClassic/PSClassic.cpp
-        ${SRC}/USBHost/HostDriver/SwitchWired/SwitchWired.cpp
-        ${SRC}/USBHost/HostDriver/SwitchPro/SwitchPro.cpp
-        ${SRC}/USBHost/HostDriver/PS5/PS5.cpp
-        ${SRC}/USBHost/HostDriver/PS4/PS4.cpp
-        ${SRC}/USBHost/HostDriver/PS3/PS3.cpp
-        ${SRC}/USBHost/HostDriver/N64/N64.cpp
-        ${SRC}/USBHost/HostDriver/HIDGeneric/HIDGeneric.cpp
-
-        ${SRC}/USBHost/HIDParser/HIDJoystick.cpp
-        ${SRC}/USBHost/HIDParser/HIDReportDescriptor.cpp
-        ${SRC}/USBHost/HIDParser/HIDReportDescriptorElements.cpp
-        ${SRC}/USBHost/HIDParser/HIDReportDescriptorUsages.cpp
-        ${SRC}/USBHost/HIDParser/HIDUtils.cpp
-
-        # XInput
-        ${SRC}/USBHost/HostDriver/XInput/XboxOG.cpp
-        ${SRC}/USBHost/HostDriver/XInput/XboxOne.cpp
-        ${SRC}/USBHost/HostDriver/XInput/Xbox360.cpp
-        ${SRC}/USBHost/HostDriver/XInput/Xbox360W.cpp
-        ${SRC}/USBHost/HostDriver/XInput/tuh_xinput/tuh_xinput.cpp
-    )
-    list(APPEND LIBS_BOARD
-        tinyusb_host
-        tinyusb_pico_pio_usb
-    )
-endif()
 
 if(EN_BLUETOOTH)
     add_compile_definitions(CONFIG_EN_BLUETOOTH=1)
@@ -383,10 +282,6 @@ if(EN_RGB)
 endif()
 
 include_directories(${INC_DIRS_BOARD})
-
-if(EN_USB_HOST)
-    add_subdirectory(${PICO_PIO_USB_PATH} ${CMAKE_BINARY_DIR}/Pico-PIO-USB)
-endif()
 
 if(EN_BLUETOOTH)
     add_subdirectory(${BLUEPAD32_ROOT}/src/components/bluepad32 libbluepad32)
