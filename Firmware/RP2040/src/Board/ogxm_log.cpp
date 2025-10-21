@@ -16,16 +16,7 @@
 std::ostream& operator<<(std::ostream& os, DeviceDriverType type) {
     switch (type) {
         case DeviceDriverType::NONE:          os << "NONE"; break;
-        case DeviceDriverType::XBOXOG:        os << "XBOXOG"; break;
-        case DeviceDriverType::XBOXOG_SB:     os << "XBOXOG_SB"; break;
-        case DeviceDriverType::XBOXOG_XR:     os << "XBOXOG_XR"; break;
-        case DeviceDriverType::XINPUT:        os << "XINPUT"; break;
         case DeviceDriverType::PS3:           os << "PS3"; break;
-        case DeviceDriverType::DINPUT:        os << "DINPUT"; break;
-        case DeviceDriverType::PSCLASSIC:     os << "PSCLASSIC"; break;
-        case DeviceDriverType::SWITCH:        os << "SWITCH"; break;
-        case DeviceDriverType::WEBAPP:        os << "WEBAPP"; break;
-        case DeviceDriverType::UART_BRIDGE:   os << "UART_BRIDGE"; break;
         default:                              os << "UNKNOWN"; break;
     }
     return os;
